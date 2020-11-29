@@ -1030,6 +1030,16 @@ c_print_type_no_offsets (struct type *type,
   flags->print_offsets = old_po;
 }
 
+static void
+c_type_print_base_di (struct type *type, struct ui_file *stream,
+				int show, int level,
+				enum language language,
+				const struct type_print_options *flags,
+				struct print_offset_data *podata)
+{
+  fprintf_filtered (stream, "TEST! ");
+}
+
 /* Helper for 'c_type_print_base' that handles structs and unions.
    For a description of the arguments, see 'c_type_print_base'.  */
 
@@ -1040,6 +1050,11 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
 				const struct type_print_options *flags,
 				struct print_offset_data *podata)
 {
+  if (flags->print_di == 1) {
+    c_type_print_base_di(type, stream, show, level, language, flags, podata);
+    return;
+  }
+
   struct type_print_options local_flags = *flags;
   local_flags.local_typedefs = NULL;
 
