@@ -4,6 +4,7 @@
 *.stamp
 *.swp
 *.lo
+cscope.out
 
 /gdb/doc
 /Makefile
