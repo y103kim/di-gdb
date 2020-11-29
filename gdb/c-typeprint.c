@@ -1031,13 +1031,31 @@ c_print_type_no_offsets (struct type *type,
 }
 
 static void
-c_type_print_base_di (struct type *type, struct ui_file *stream,
-				int show, int level,
-				enum language language,
-				const struct type_print_options *flags,
-				struct print_offset_data *podata)
+c_type_print_base_di (struct type *type, struct ui_file *stream, std::string parent)
 {
-  fprintf_filtered (stream, "TEST! ");
+  int len = type->num_fields ();
+
+  for (int i = TYPE_N_BASECLASSES (type); i < len; i++)
+    {
+      auto raw = TYPE_FIELD_NAME (type, i);
+      if (!raw)
+        continue;
+      std::string name = parent;
+      if (name.size())
+        name += ".";
+      name += raw;
+      if (strlen(raw) > 0)
+        {
+          fprintf_filtered (stream, name.c_str());
+          fprintf_filtered (stream, "\n");
+        }
+      bool is_static = field_is_static (&type->field (i));
+
+      if (!is_static
+          && (type->field (i).type ()->code () == TYPE_CODE_STRUCT
+              || type->field (i).type ()->code () == TYPE_CODE_UNION))
+        c_type_print_base_di(type->field (i).type (), stream, name);
+    }
 }
 
 /* Helper for 'c_type_print_base' that handles structs and unions.
@@ -1051,7 +1069,8 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
 				struct print_offset_data *podata)
 {
   if (flags->print_di == 1) {
-    c_type_print_base_di(type, stream, show, level, language, flags, podata);
+    fprintf_filtered (stream, "ptype/D\n");
+    c_type_print_base_di(type, stream, "");
     return;
   }
 
