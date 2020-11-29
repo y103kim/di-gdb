@@ -475,6 +475,17 @@ whatis_exp (const char *exp, int show)
 		      }
 		    break;
 		  }
+		case 'D':
+		  {
+		    if (show > 0
+			&& (current_language->la_language == language_c
+			    || current_language->la_language == language_cplus
+			    || current_language->la_language == language_rust))
+		      {
+			flags.print_di = 1;
+		      }
+		    break;
+		  }
 		default:
 		  error (_("unrecognized flag '%c'"), *exp);
 		}
@@ -543,7 +554,8 @@ whatis_exp (const char *exp, int show)
 	  || type->code () == TYPE_CODE_UNION))
     fprintf_filtered (gdb_stdout, "/* offset    |  size */  ");
 
-  printf_filtered ("type = ");
+  if (flags.print_di == 0)
+    printf_filtered ("type = ");
 
   std::unique_ptr<typedef_hash_table> table_holder;
   std::unique_ptr<ext_lang_type_printers> printer_holder;

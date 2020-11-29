@@ -87,6 +87,9 @@ struct type_print_options
   /* True means to print offsets, a la 'pahole'.  */
   unsigned int print_offsets : 1;
 
+  /* DI style'pahole'.  */
+  unsigned int print_di : 1;
+
   /* The number of nested type definitions to print.  -1 == all.  */
   int print_nested_type_limit;
 
