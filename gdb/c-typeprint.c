@@ -1031,6 +1031,33 @@ c_print_type_no_offsets (struct type *type,
 }
 
 static void
+c_type_print_addtional_di (struct type *ftype, struct ui_file *stream)
+{
+  if (ftype->code () == TYPE_CODE_ARRAY)
+    {
+      fprintf_filtered (stream, " ");
+      if (TYPE_TARGET_TYPE(ftype)->name())
+        {
+          std::string tname = TYPE_TARGET_TYPE(ftype)->name();
+          if (tname == "char" || tname == "unsigned char")
+            fprintf_filtered (stream, "char");
+        }
+      fprintf_filtered (stream, "[]%lu", TYPE_TARGET_TYPE(ftype)->length);
+    }
+  else if (ftype->code () == TYPE_CODE_PTR)
+    {
+      fprintf_filtered (stream, " ");
+      if (TYPE_TARGET_TYPE(ftype)->name())
+        {
+          std::string tname = TYPE_TARGET_TYPE(ftype)->name();
+          if (tname == "char" || tname == "unsigned char")
+            fprintf_filtered (stream, "char");
+        }
+      fprintf_filtered (stream, "*");
+    }
+}
+
+static void
 c_type_print_base_di (struct type *type, struct ui_file *stream, std::string parent,
                       struct print_offset_data *podata)
 {
@@ -1047,18 +1074,18 @@ c_type_print_base_di (struct type *type, struct ui_file *stream, std::string par
         name += ".";
       name += raw;
       auto ftype = type->field (i).type ();
-      auto ftype_code = type->field (i).type ()->code ();
       if (strlen(raw) > 0)
         {
           podata->update (type, i, stream);
           fprintf_filtered (stream, " ");
           fprintf_filtered (stream, name.c_str());
+          c_type_print_addtional_di(ftype, stream);
           fprintf_filtered (stream, "\n");
         }
       bool is_static = field_is_static (&type->field (i));
 
-      if (!is_static && (ftype_code == TYPE_CODE_STRUCT
-                         || ftype_code == TYPE_CODE_UNION))
+      if (!is_static && (ftype->code () == TYPE_CODE_STRUCT
+                         || ftype->code () == TYPE_CODE_UNION))
         {
           local_podata.offset_bitpos
             = podata->offset_bitpos + TYPE_FIELD_BITPOS (type, i);
