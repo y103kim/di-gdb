@@ -1031,8 +1031,10 @@ c_print_type_no_offsets (struct type *type,
 }
 
 static void
-c_type_print_addtional_int (struct type *type, struct ui_file *stream, bool space)
+c_type_print_addtional_int (struct type *type, struct ui_file *stream, bool first)
 {
+  if (!first)
+    type = check_typedef(type);
   if (type->code () != TYPE_CODE_INT)
     return;
   if (!type->name ())
@@ -1040,7 +1042,7 @@ c_type_print_addtional_int (struct type *type, struct ui_file *stream, bool spac
   std::string type_name = type->name ();
   if (type_name.empty())
     return;
-  if (space)
+  if (first)
     fprintf_filtered (stream, " ");
   char s = type_name[0] == 'u' ? 'u' : 's';
   fprintf_filtered (stream, "%c%lu", s, type->length * 8);
@@ -1095,6 +1097,7 @@ c_type_print_base_di (struct type *type, struct ui_file *stream, std::string par
         name += ".";
       name += raw;
       auto ftype = type->field (i).type ();
+      ftype = check_typedef(ftype);
       if (strlen(raw) > 0)
         {
           podata->update (type, i, stream);
