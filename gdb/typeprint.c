@@ -117,15 +117,6 @@ print_offset_data::update (struct type *type, unsigned int field_idx,
     }
 
   struct type *ftype = check_typedef (type->field (field_idx).type ());
-  if (type->code () == TYPE_CODE_UNION)
-    {
-      /* Since union fields don't have the concept of offsets, we just
-	 print their sizes.  */
-      fprintf_filtered (stream, "/*              %4s */",
-			pulongest (TYPE_LENGTH (ftype)));
-      return;
-    }
-
   unsigned int bitpos = TYPE_FIELD_BITPOS (type, field_idx);
   unsigned int fieldsize_byte = TYPE_LENGTH (ftype);
   unsigned int fieldsize_bit = fieldsize_byte * TARGET_CHAR_BIT;
