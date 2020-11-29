@@ -1031,8 +1031,25 @@ c_print_type_no_offsets (struct type *type,
 }
 
 static void
+c_type_print_addtional_int (struct type *type, struct ui_file *stream, bool space)
+{
+  if (type->code () != TYPE_CODE_INT)
+    return;
+  if (!type->name ())
+    return;
+  std::string type_name = type->name ();
+  if (type_name.empty())
+    return;
+  if (space)
+    fprintf_filtered (stream, " ");
+  char s = type_name[0] == 'u' ? 'u' : 's';
+  fprintf_filtered (stream, "%c%lu", s, type->length * 8);
+}
+
+static void
 c_type_print_addtional_di (struct type *ftype, struct ui_file *stream)
 {
+  c_type_print_addtional_int(ftype, stream, true);
   if (ftype->code () == TYPE_CODE_ARRAY)
     {
       fprintf_filtered (stream, " ");
@@ -1041,6 +1058,8 @@ c_type_print_addtional_di (struct type *ftype, struct ui_file *stream)
           std::string tname = TYPE_TARGET_TYPE(ftype)->name();
           if (tname == "char" || tname == "unsigned char")
             fprintf_filtered (stream, "char");
+          else
+            c_type_print_addtional_int(TYPE_TARGET_TYPE(ftype), stream, false);
         }
       fprintf_filtered (stream, "[]%lu", TYPE_TARGET_TYPE(ftype)->length);
     }
@@ -1052,6 +1071,8 @@ c_type_print_addtional_di (struct type *ftype, struct ui_file *stream)
           std::string tname = TYPE_TARGET_TYPE(ftype)->name();
           if (tname == "char" || tname == "unsigned char")
             fprintf_filtered (stream, "char");
+          else
+            c_type_print_addtional_int(TYPE_TARGET_TYPE(ftype), stream, false);
         }
       fprintf_filtered (stream, "*");
     }
