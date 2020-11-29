@@ -1031,30 +1031,42 @@ c_print_type_no_offsets (struct type *type,
 }
 
 static void
-c_type_print_base_di (struct type *type, struct ui_file *stream, std::string parent)
+c_type_print_base_di (struct type *type, struct ui_file *stream, std::string parent,
+                      struct print_offset_data *podata)
 {
   int len = type->num_fields ();
 
+  struct print_offset_data local_podata;
   for (int i = TYPE_N_BASECLASSES (type); i < len; i++)
     {
       auto raw = TYPE_FIELD_NAME (type, i);
       if (!raw)
         continue;
       std::string name = parent;
-      if (name.size())
+      if (name.size() && *name.rbegin() != '.')
         name += ".";
       name += raw;
+      auto ftype = type->field (i).type ();
+      auto ftype_code = type->field (i).type ()->code ();
       if (strlen(raw) > 0)
         {
+          podata->update (type, i, stream);
+          fprintf_filtered (stream, " ");
           fprintf_filtered (stream, name.c_str());
           fprintf_filtered (stream, "\n");
         }
       bool is_static = field_is_static (&type->field (i));
 
-      if (!is_static
-          && (type->field (i).type ()->code () == TYPE_CODE_STRUCT
-              || type->field (i).type ()->code () == TYPE_CODE_UNION))
-        c_type_print_base_di(type->field (i).type (), stream, name);
+      if (!is_static && (ftype_code == TYPE_CODE_STRUCT
+                         || ftype_code == TYPE_CODE_UNION))
+        {
+          local_podata.offset_bitpos
+            = podata->offset_bitpos + TYPE_FIELD_BITPOS (type, i);
+          local_podata.end_bitpos
+            = podata->end_bitpos
+            - TYPE_LENGTH (ftype) * TARGET_CHAR_BIT;
+          c_type_print_base_di(ftype, stream, name, &local_podata);
+        }
     }
 }
 
@@ -1070,7 +1082,7 @@ c_type_print_base_struct_union (struct type *type, struct ui_file *stream,
 {
   if (flags->print_di == 1) {
     fprintf_filtered (stream, "ptype/D\n");
-    c_type_print_base_di(type, stream, "");
+    c_type_print_base_di(type, stream, "", podata);
     return;
   }
 
